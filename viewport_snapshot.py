@@ -94,14 +94,23 @@ class SNAPSHOT_OT_save_image(bpy.types.Operator):
     bl_label = "Save Image (PNG)"
     bl_options = {'REGISTER'}
 
-    def execute(self, context):
+    filepath: StringProperty(subtype='FILE_PATH')
+
+    def invoke(self, context, event):
         scene = context.scene
         filepath = self._get_filepath(scene, ".png")
         if not filepath:
             return {'CANCELLED'}
 
         if os.path.exists(filepath):
-            self.report({'WARNING'}, f"File exists: {filepath}")
+            # Show confirmation dialog
+            return context.window_manager.invoke_confirm(self, event)
+        return self.execute(context)
+
+    def execute(self, context):
+        scene = context.scene
+        filepath = self._get_filepath(scene, ".png")
+        if not filepath:
             return {'CANCELLED'}
 
         # Ensure directory exists
@@ -145,14 +154,20 @@ class SNAPSHOT_OT_save_video(bpy.types.Operator):
     bl_label = "Save Video (MP4)"
     bl_options = {'REGISTER'}
 
-    def execute(self, context):
+    def invoke(self, context, event):
         scene = context.scene
         filepath = self._get_filepath(scene, ".mp4")
         if not filepath:
             return {'CANCELLED'}
 
         if os.path.exists(filepath):
-            self.report({'WARNING'}, f"File exists: {filepath}")
+            return context.window_manager.invoke_confirm(self, event)
+        return self.execute(context)
+
+    def execute(self, context):
+        scene = context.scene
+        filepath = self._get_filepath(scene, ".mp4")
+        if not filepath:
             return {'CANCELLED'}
 
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
