@@ -215,38 +215,38 @@ class SNAPSHOT_PT_panel(bpy.types.Panel):
     bl_category = "Layout快拍"
 
     def draw(self, context):
-        layout = self.layout
-        scene = context.scene
+        try:
+            layout = self.layout
+            scene = context.scene
 
-        # Auto-fill path if empty and blend file is saved
-        if not scene.snapshot_path and bpy.data.filepath:
-            scene.snapshot_path = os.path.dirname(bpy.data.filepath)
+            # Path + blend path button
+            row = layout.row(align=True)
+            row.prop(scene, "snapshot_path", text="Path")
+            row.operator("snapshot.get_blend_path", text="", icon='ORIENTATION_CURSOR')
 
-        # Path + blend path button
-        row = layout.row(align=True)
-        row.prop(scene, "snapshot_path", text="Path")
-        row.operator("snapshot.get_blend_path", text="", icon='ORIENTATION_CURSOR')
+            # Filename + camera button
+            row = layout.row(align=True)
+            row.prop(scene, "snapshot_filename", text="Name")
+            row.operator("snapshot.get_camera_name", text="", icon='CAMERA_DATA')
 
-        # Filename + camera button
-        row = layout.row(align=True)
-        row.prop(scene, "snapshot_filename", text="Name")
-        row.operator("snapshot.get_camera_name", text="", icon='CAMERA_DATA')
+            # Open folder checkbox
+            layout.prop(scene, "snapshot_open_folder", text="Open folder after save")
 
-        # Open folder checkbox
-        layout.prop(scene, "snapshot_open_folder", text="Open folder after save")
+            # Buttons
+            layout.separator()
+            layout.operator("snapshot.save_image", icon='IMAGE_DATA')
+            layout.operator("snapshot.save_video", icon='FILE_MOVIE')
 
-        # Buttons
-        layout.separator()
-        layout.operator("snapshot.save_image", icon='IMAGE_DATA')
-        layout.operator("snapshot.save_video", icon='FILE_MOVIE')
+            # Random materials
+            layout.separator()
+            layout.operator("snapshot.random_materials", icon='MATERIAL')
 
-        # Random materials
-        layout.separator()
-        layout.operator("snapshot.random_materials", icon='MATERIAL')
-
-        # Camera warning
-        if not scene.camera:
-            layout.label(text="No scene camera!", icon='ERROR')
+            # Camera warning
+            if not scene.camera:
+                layout.label(text="No scene camera!", icon='ERROR')
+        except Exception as e:
+            layout = self.layout
+            layout.label(text=f"ERROR: {str(e)}")
 
 
 classes = (
@@ -266,8 +266,7 @@ def register():
     bpy.types.Scene.snapshot_path = StringProperty(
         name="Save Path",
         description="Directory to save snapshots",
-        default="",
-        subtype='DIR_PATH'
+        default=""
     )
     bpy.types.Scene.snapshot_filename = StringProperty(
         name="Filename",
