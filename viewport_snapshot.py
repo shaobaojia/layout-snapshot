@@ -46,6 +46,42 @@ class SNAPSHOT_OT_get_blend_path(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class SNAPSHOT_OT_browse_path(bpy.types.Operator):
+    """Open file browser to select save directory"""
+    bl_idname = "snapshot.browse_path"
+    bl_label = "Browse Path"
+    bl_options = {'REGISTER'}
+
+    filepath: StringProperty(subtype='DIR_PATH')
+
+    def execute(self, context):
+        scene = context.scene
+        # filepath from file browser is the selected directory
+        scene.snapshot_path = self.filepath
+        self.report({'INFO'}, f"Path: {scene.snapshot_path}")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        # Open file browser in directory selection mode
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
+class SNAPSHOT_OT_safe_frame_one(bpy.types.Operator):
+    """Set scene safe frame title to 1.0"""
+    bl_idname = "snapshot.safe_frame_one"
+    bl_label = "Safe Frame 1.0"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        scene.safe_areas.title = (1.0, 1.0)
+        if scene.camera:
+            scene.camera.data.show_safe_areas = True
+        self.report({'INFO'}, "Safe frame title set to 1.0")
+        return {'FINISHED'}
+
+
 class SNAPSHOT_OT_random_materials(bpy.types.Operator):
     """Create unique material with random base color for each selected object"""
     bl_idname = "snapshot.random_materials"
@@ -219,10 +255,11 @@ class SNAPSHOT_PT_panel(bpy.types.Panel):
             layout = self.layout
             scene = context.scene
 
-            # Path + blend path button
+            # Path + blend path + file browser buttons
             row = layout.row(align=True)
             row.prop(scene, "snapshot_path", text="Path")
             row.operator("snapshot.get_blend_path", text="", icon='ORIENTATION_CURSOR')
+            row.operator("snapshot.browse_path", text="", icon='FILEBROWSER')
 
             # Filename + camera button
             row = layout.row(align=True)
@@ -236,6 +273,10 @@ class SNAPSHOT_PT_panel(bpy.types.Panel):
             layout.separator()
             layout.operator("snapshot.save_image", icon='IMAGE_DATA')
             layout.operator("snapshot.save_video", icon='FILE_MOVIE')
+
+            # Camera tools
+            layout.separator()
+            layout.operator("snapshot.safe_frame_one", icon='CAMERA_DATA')
 
             # Random materials
             layout.separator()
@@ -252,6 +293,8 @@ class SNAPSHOT_PT_panel(bpy.types.Panel):
 classes = (
     SNAPSHOT_OT_get_camera_name,
     SNAPSHOT_OT_get_blend_path,
+    SNAPSHOT_OT_browse_path,
+    SNAPSHOT_OT_safe_frame_one,
     SNAPSHOT_OT_random_materials,
     SNAPSHOT_OT_save_image,
     SNAPSHOT_OT_save_video,
